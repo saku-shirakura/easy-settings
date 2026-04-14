@@ -31,6 +31,10 @@ where
 }
 
 impl SettingValue {
+    pub fn from_raw_string(value: Option<String>) -> Self {
+        Self(value)
+    }
+
     pub fn raw_string(&self) -> &Option<String> {
         &self.0
     }
@@ -67,10 +71,10 @@ impl RegistryNode {
 pub trait Registry: Default + Clone {
     fn set(&mut self, key: &str, value: SettingValue);
 
-    fn set_from_row(&mut self, row: &SettingRow);
+    fn set_from_row(&mut self, row: SettingRow);
 
-    fn set_from_row_vec(&mut self, row: &Vec<SettingRow>) {
-        row.iter().for_each(|x| self.set_from_row(x))
+    fn set_from_row_vec(&mut self, row: Vec<SettingRow>) {
+        row.into_iter().for_each(|x| self.set_from_row(x))
     }
 
     fn get(&self, key: &str) -> Option<SettingValue>;

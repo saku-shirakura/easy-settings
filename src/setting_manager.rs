@@ -78,7 +78,7 @@ where
         let reg: Vec<SettingRow> = sqlx::query_as(&format!("SELECT * FROM {}", self.tablename))
             .fetch_all(&mut *self.get_pool().await.acquire().await?)
             .await?;
-        self.registry.set_from_row_vec(&reg);
+        self.registry.set_from_row_vec(reg);
         self.reset_tmp();
         Ok(())
     }
@@ -91,7 +91,7 @@ where
         .bind(key)
         .fetch_all(&mut *self.get_pool().await.acquire().await?)
         .await?;
-        self.registry.set_from_row_vec(&reg);
+        self.registry.set_from_row_vec(reg);
         self.reset_tmp();
         Ok(())
     }
