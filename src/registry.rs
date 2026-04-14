@@ -3,7 +3,7 @@ use serde::de::DeserializeOwned;
 use serde::Serialize;
 use tracing_unwrap::ResultExt;
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Debug)]
 pub struct SettingValue(Option<String>);
 
 impl<'a, T> From<Option<T>> for SettingValue

@@ -48,7 +48,7 @@ where
     #[builder(default = R::default(), setter(skip))]
     registry_tmp: R,
     #[builder(default = "settings__easy_settings_Yz4Gc".into())]
-    #[builder(setter(into))]
+    #[builder(setter(custom))]
     tablename: String,
     #[builder(default = Default::default(), setter(custom))]
     pool: Option<Arc<SqlitePool>>,
@@ -58,14 +58,22 @@ impl<R> SettingManagerBuilder<R>
 where
     R: Registry,
 {
+    pub fn tablename(&mut self, tablename: impl Into<String>, pool: Arc<SqlitePool>) -> &mut Self {
+        self.tablename = Some(tablename.into());
+        self.pool = Some(Some(pool));
+        self
+    }
+
     pub async fn db_pool(&mut self, pool: Option<Arc<SqlitePool>>) -> &mut Self {
         self.pool = Some(pool);
-        migrate_pool(match self.pool.as_ref() {
-            None | Some(None) => default_database_pool().await,
-            Some(Some(x)) => x.clone(),
-        })
-        .await
-        .unwrap_or_log();
+        if self.tablename.is_none() {
+            migrate_pool(match self.pool.as_ref() {
+                None | Some(None) => default_database_pool().await,
+                Some(Some(x)) => x.clone(),
+            })
+            .await
+            .unwrap_or_log();
+        }
         self
     }
 }
