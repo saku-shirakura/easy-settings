@@ -1,24 +1,35 @@
 mod auto_impl;
 mod manual_impl;
-mod object;
-
-use crate::object::{Combo, Object};
 use chrono::DateTime;
 use easy_settings::{Registry, SettingManager, SettingManagerBuilder, SettingValue};
 use sqlx::{query, Row, SqlitePool};
 use std::str::FromStr;
 use std::sync::Arc;
 
+fn auto_to_manual_object(obj: auto_impl::Object) -> manual_impl::Object {
+    manual_impl::Object::new(obj.id)
+}
+
+fn auto_to_manual_conbo(combo: auto_impl::Combo) -> manual_impl::Combo {
+    match combo {
+        auto_impl::Combo::A => manual_impl::Combo::A,
+        auto_impl::Combo::B => manual_impl::Combo::B,
+        auto_impl::Combo::C => manual_impl::Combo::C,
+    }
+}
+
 fn auto_to_manual(reg: auto_impl::RegistryExample) -> manual_impl::RegistryExample {
     manual_impl::RegistryExample {
         integer: reg.integer,
         float: reg.float,
         string: reg.string,
-        object: reg.object,
-        array: reg.array,
+        object: reg.object.map(auto_to_manual_object),
+        array: reg
+            .array
+            .map(|x| x.into_iter().map(auto_to_manual_object).collect()),
         datetime: reg.datetime,
         bool: reg.bool,
-        combo: reg.combo,
+        combo: reg.combo.map(auto_to_manual_conbo),
     }
 }
 
@@ -61,17 +72,19 @@ async fn derive_implementation_test() {
         .set_abc(Some("90f64".into()));
     manual_manager
         .get_tmp_registry()
-        .set_object(Some(Object::new(500)));
+        .set_object(Some(manual_impl::Object::new(500)));
     manual_manager.get_tmp_registry().set_array(Some(vec![
-        Object::new(600),
-        Object::new(700),
-        Object::new(800),
+        manual_impl::Object::new(600),
+        manual_impl::Object::new(700),
+        manual_impl::Object::new(800),
     ]));
     manual_manager
         .get_tmp_registry()
         .set_datetime(Some(DateTime::from_str("2026-01-01T00:00:00Z").unwrap()));
     manual_manager.get_tmp_registry().set_bool(Some(true));
-    manual_manager.get_tmp_registry().set_combo(Some(Combo::A));
+    manual_manager
+        .get_tmp_registry()
+        .set_combo(Some(manual_impl::Combo::A));
     let manual_before_apply = manual_manager.get_tmp_registry().clone();
     manual_manager.save().await.unwrap();
 
@@ -83,17 +96,19 @@ async fn derive_implementation_test() {
         .set_abc(Some("90f64".into()));
     auto_manager
         .get_tmp_registry()
-        .set_object(Some(Object::new(500)));
+        .set_object(Some(auto_impl::Object::new(500)));
     auto_manager.get_tmp_registry().set_array(Some(vec![
-        Object::new(600),
-        Object::new(700),
-        Object::new(800),
+        auto_impl::Object::new(600),
+        auto_impl::Object::new(700),
+        auto_impl::Object::new(800),
     ]));
     auto_manager
         .get_tmp_registry()
         .set_datetime(Some(DateTime::from_str("2026-01-01T00:00:00Z").unwrap()));
     auto_manager.get_tmp_registry().set_bool(Some(true));
-    auto_manager.get_tmp_registry().set_combo(Some(Combo::A));
+    auto_manager
+        .get_tmp_registry()
+        .set_combo(Some(auto_impl::Combo::A));
     let auto_before_apply = auto_manager.get_tmp_registry().clone();
     auto_manager.save().await.unwrap();
 
@@ -223,12 +238,16 @@ async fn derive_implementation_test() {
     assert_eq!(auto_reg.get_abc(), Some("90f64".into()));
     auto_reg.set_abc(None);
     assert_eq!(auto_reg.get_abc(), None);
-    assert_eq!(auto_reg.get_object(), Object::new(500));
+    assert_eq!(auto_reg.get_object(), auto_impl::Object::new(500));
     auto_reg.set_object(None);
-    assert_eq!(auto_reg.get_object(), Object::new8000());
+    assert_eq!(auto_reg.get_object(), auto_impl::Object::new8000());
     assert_eq!(
         auto_reg.get_array(),
-        Some(vec![Object::new(600), Object::new(700), Object::new(800),])
+        Some(vec![
+            auto_impl::Object::new(600),
+            auto_impl::Object::new(700),
+            auto_impl::Object::new(800),
+        ])
     );
     auto_reg.set_array(None);
     assert_eq!(auto_reg.get_array(), None);
@@ -241,7 +260,7 @@ async fn derive_implementation_test() {
     assert_eq!(auto_reg.get_bool(), Some(true));
     auto_reg.set_bool(None);
     assert_eq!(auto_reg.get_bool(), None);
-    assert_eq!(auto_reg.get_combo(), Some(Combo::A));
+    assert_eq!(auto_reg.get_combo(), Some(auto_impl::Combo::A));
     auto_reg.set_combo(None);
     assert_eq!(auto_reg.get_combo(), None);
     // manual
@@ -254,12 +273,16 @@ async fn derive_implementation_test() {
     assert_eq!(man_reg.get_abc(), Some("90f64".into()));
     man_reg.set_abc(None);
     assert_eq!(man_reg.get_abc(), None);
-    assert_eq!(man_reg.get_object(), Object::new(500));
+    assert_eq!(man_reg.get_object(), manual_impl::Object::new(500));
     man_reg.set_object(None);
-    assert_eq!(man_reg.get_object(), Object::new8000());
+    assert_eq!(man_reg.get_object(), manual_impl::Object::new8000());
     assert_eq!(
         man_reg.get_array(),
-        Some(vec![Object::new(600), Object::new(700), Object::new(800),])
+        Some(vec![
+            manual_impl::Object::new(600),
+            manual_impl::Object::new(700),
+            manual_impl::Object::new(800),
+        ])
     );
     man_reg.set_array(None);
     assert_eq!(man_reg.get_array(), None);
@@ -272,7 +295,7 @@ async fn derive_implementation_test() {
     assert_eq!(man_reg.get_bool(), Some(true));
     man_reg.set_bool(None);
     assert_eq!(man_reg.get_bool(), None);
-    assert_eq!(man_reg.get_combo(), Some(Combo::A));
+    assert_eq!(man_reg.get_combo(), Some(manual_impl::Combo::A));
     man_reg.set_combo(None);
     assert_eq!(man_reg.get_combo(), None);
 }

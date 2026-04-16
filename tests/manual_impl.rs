@@ -1,5 +1,26 @@
-use crate::object::{Combo, Object};
+#[derive(Deserialize, Serialize, Default, Clone, Debug, PartialEq)]
+pub struct Object {
+    id: i64,
+}
+
+impl Object {
+    pub fn new(id: i64) -> Self {
+        Object { id }
+    }
+
+    pub fn new8000() -> Self {
+        Self::new(8000)
+    }
+}
+
+#[derive(Deserialize, Serialize, Clone, Debug, PartialEq)]
+pub enum Combo {
+    A,
+    B,
+    C,
+}
 use chrono::{DateTime, Local};
+use serde::{Deserialize, Serialize};
 use easy_settings::{Registry, RegistryNode, SettingValue};
 
 #[derive(Clone, Debug, PartialEq, Default)]
