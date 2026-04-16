@@ -1,0 +1,1 @@
+This function registers rows from multiple configuration tables in a single batch.

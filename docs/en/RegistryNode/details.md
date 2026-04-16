@@ -1,0 +1,1 @@
+This represents subcategories and settings items belonging to a category.

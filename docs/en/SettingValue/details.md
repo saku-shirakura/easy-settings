@@ -1,0 +1,1 @@
+String representation of the setting value stored in the database.

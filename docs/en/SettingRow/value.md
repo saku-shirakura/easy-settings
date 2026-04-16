@@ -1,0 +1,1 @@
+The settings are parsed and their values ​​are retrieved.

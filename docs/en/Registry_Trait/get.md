@@ -1,0 +1,1 @@
+The setting value is retrieved from the setting key.

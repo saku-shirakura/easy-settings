@@ -1,0 +1,1 @@
+This retrieves the string stored internally.

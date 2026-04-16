@@ -1,0 +1,1 @@
+Retrieves all setting keys.

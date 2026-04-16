@@ -1,0 +1,1 @@
+This changes the database pool used to save the settings.

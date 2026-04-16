@@ -1,0 +1,1 @@
+Replaces the string stored internally.

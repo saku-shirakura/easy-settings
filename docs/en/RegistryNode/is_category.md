@@ -1,0 +1,1 @@
+This function returns [`true`] if the Node is a category, and [`false`] otherwise.

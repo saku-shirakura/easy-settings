@@ -4,6 +4,7 @@ use serde::Serialize;
 use tracing_unwrap::ResultExt;
 
 #[derive(PartialEq, Debug)]
+#[doc=include_str!("../docs/en/SettingValue/details.md")]
 pub struct SettingValue(Option<String>);
 
 impl<'a, T> From<Option<T>> for SettingValue
@@ -31,22 +32,26 @@ where
 }
 
 impl SettingValue {
+    #[doc=include_str!("../docs/en/SettingValue/from_raw_string.md")]
     pub fn from_raw_string(value: Option<String>) -> Self {
         Self(value)
     }
 
+    #[doc=include_str!("../docs/en/SettingValue/raw_string.md")]
     pub fn raw_string(&self) -> &Option<String> {
         &self.0
     }
 }
 
 #[derive(Debug, Clone, Eq, PartialEq)]
+#[doc=include_str!("../docs/en/RegistryNode/details.md")]
 pub enum RegistryNode {
     Category(&'static str),
     SettingItem(&'static str),
 }
 
 impl RegistryNode {
+    #[doc=include_str!("../docs/en/RegistryNode/is_category.md")]
     pub fn is_category(&self) -> bool {
         match self {
             RegistryNode::Category(_) => true,
@@ -54,6 +59,7 @@ impl RegistryNode {
         }
     }
 
+    #[doc=include_str!("../docs/en/RegistryNode/is_setting_item.md")]
     pub fn is_setting_item(&self) -> bool {
         match self {
             RegistryNode::Category(_) => false,
@@ -61,6 +67,7 @@ impl RegistryNode {
         }
     }
 
+    #[doc=include_str!("../docs/en/RegistryNode/value.md")]
     pub fn value(&self) -> &'static str {
         match self {
             RegistryNode::Category(x) => x,
@@ -69,19 +76,25 @@ impl RegistryNode {
     }
 }
 
+#[doc=include_str!("../docs/en/Registry_Trait/details.md")]
 pub trait Registry: Default + Clone {
+    #[doc=include_str!("../docs/en/Registry_Trait/set.md")]
     fn set(&mut self, key: &str, value: SettingValue);
 
+    #[doc=include_str!("../docs/en/Registry_Trait/set_from_row.md")]
     fn set_from_row(&mut self, row: SettingRow) {
         self.set(&*row.setting_key, SettingValue::from_raw_string(row.value))
     }
 
+    #[doc=include_str!("../docs/en/Registry_Trait/set_from_row_vec.md")]
     fn set_from_row_vec(&mut self, row: Vec<SettingRow>) {
         row.into_iter().for_each(|x| self.set_from_row(x))
     }
 
+    #[doc=include_str!("../docs/en/Registry_Trait/get.md")]
     fn get(&self, key: &str) -> Option<SettingValue>;
 
+    #[doc=include_str!("../docs/en/Registry_Trait/items.md")]
     fn items(&self) -> Vec<(&str, SettingValue)> {
         Self::keys()
             .iter()
@@ -89,9 +102,12 @@ pub trait Registry: Default + Clone {
             .collect()
     }
 
+    #[doc=include_str!("../docs/en/Registry_Trait/keys.md")]
     fn keys() -> &'static [&'static str];
 
+    #[doc=include_str!("../docs/en/Registry_Trait/categories.md")]
     fn categories() -> &'static [&'static str];
 
+    #[doc=include_str!("../docs/en/Registry_Trait/child_nodes.md")]
     fn child_nodes(parent_node: Option<&str>) -> &'static [RegistryNode];
 }

@@ -1,0 +1,1 @@
+This retrieves the name held by the Node.

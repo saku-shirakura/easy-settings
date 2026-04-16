@@ -1,0 +1,1 @@
+Set the values from the rows in the settings table.

@@ -1,0 +1,1 @@
+Retrieves the settings that have already been applied.

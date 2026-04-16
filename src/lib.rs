@@ -2,6 +2,7 @@ mod db;
 mod registry;
 mod setting_manager;
 
+#[doc= include_str!("../docs/en/Registry_Derive/details.md")]
 pub use easy_settings_derive::Registry;
 
 pub use setting_manager::SettingManager;

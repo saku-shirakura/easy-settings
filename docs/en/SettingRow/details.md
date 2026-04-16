@@ -1,0 +1,1 @@
+Row definitions for the configuration table

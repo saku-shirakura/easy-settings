@@ -3,12 +3,17 @@ use sqlx::{migrate, FromRow, SqliteConnection};
 use tracing_unwrap::ResultExt;
 
 #[derive(FromRow)]
+#[doc=include_str!("../docs/en/SettingRow/details.md")]
+#[doc = "```sql"]
+#[doc=include_str!("../migrations/20260412100221_easy_settings_create_settings_table_Yz4Gc.sql")]
+#[doc = "```"]
 pub struct SettingRow {
     pub setting_key: String,
     pub value: Option<String>,
 }
 
 impl SettingRow {
+    #[doc=include_str!("../docs/en/SettingRow/value.md")]
     pub fn value<T>(&self) -> Option<T>
     where
         T: DeserializeOwned,

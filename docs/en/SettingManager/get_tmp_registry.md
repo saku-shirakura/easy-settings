@@ -1,0 +1,1 @@
+This retrieves the registry entries to change the settings.

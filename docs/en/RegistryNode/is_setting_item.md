@@ -1,0 +1,1 @@
+This returns [`true`] if the Node is a configuration item, and [`false`] otherwise.
