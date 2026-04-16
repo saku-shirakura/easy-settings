@@ -1,5 +1,6 @@
 [package]
 name = "easy-settings-derive"
+description = "Implementation of the derive macro for easy-settings"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
