@@ -11,7 +11,7 @@ a `Sqlite Database`.
 
 easy-settings is designed to define configurations with the following structure:
 
-```
+```text
 Category                      | Item
  Root                         ┄ AAA, BBB
   ├ Category1                 ┄ CCC
@@ -25,7 +25,7 @@ Category                      | Item
 In easy-settings, the above structure is defined as follows:
 
 ```rust
-#[derive(Clone, Registry)]
+#[derive(Clone, easy_settings::Registry)]
 #[easy_settings(categories(
     "Category1",
     "Category2",
@@ -54,14 +54,14 @@ The following example uses `SettingManager` to persist settings to `Sqlite Datab
 If using a different store, you can operate using only `Registry` without using `SettingManager`.
 
 ```rust
-#[derive(Clone, Registry)]
+#[derive(Clone, easy_settings::Registry)]
 pub struct RegistryExample {
     aaa: Option<i64>,
 }
 async fn example() -> Result<(), Box<dyn std::error::Error>> {
     // Setting Manager (The setting registry can be saved to SqliteDB via this.)
-    let mut manager: SettingManager<RegistryExample> =
-        SettingManagerBuilder::<RegistryExample>::default().build()?;
+    let mut manager: easy_settings::SettingManager<RegistryExample> =
+        easy_settings::SettingManagerBuilder::<RegistryExample>::default().build()?;
 
     // The initial value of the setting is None.
     assert_eq!(manager.get_registry().get_aaa(), None);
@@ -70,18 +70,10 @@ async fn example() -> Result<(), Box<dyn std::error::Error>> {
     manager.get_tmp_registry().set_aaa(Some(0));
 
     // After making changes, you can apply the changes by executing `save()`.
-
     manager.save().await?;
-    / When
-    applied, the
-    setting
-    value
-    will
-    also
-    become
-    Some(0).
-        assert_eq
-    !(manager.get_registry().get_aaa(), Some(0));
+
+    // When applied, the setting value will also become Some(0).
+    assert_eq!(manager.get_registry().get_aaa(), Some(0));
     Ok(())
 }
 ```
@@ -107,18 +99,20 @@ The following attributes are available in easy-settings:
 #### Structures
 
 ```rust
+#[derive(Clone, easy_settings::Registry)]
 // Defines a list of categories.
 #[easy_settings(categories("AAA", "BBB", "..."))]
 // Defines relationships between categories.
 // parents: Indicates that a category is a parent to `children` in the relationship definition between categories.
 // children: Indicates that a category is a child to `parents` in the relationship definition between categories.
-#[easy_settings(rel(parents(), children(..)))]
+#[easy_settings(rel(parents("AAA"), children("BBB")))]
 struct Example {}
 ```
 
 #### Fields
 
 ```rust
+#[derive(Clone, easy_settings::Registry)]
 #[easy_settings(categories("AAA", "BBB", "..."))]
 struct Example {
     // Specifies the initial value of the setting.

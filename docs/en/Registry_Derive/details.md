@@ -19,18 +19,20 @@ The following attributes are available in easy-settings:
 #### Structures
 
 ```rust
+#[derive(Clone, easy_settings::Registry)]
 // Defines a list of categories.
 #[easy_settings(categories("AAA", "BBB", "..."))]
 // Defines relationships between categories.
 // parents: Indicates that a category is a parent to `children` in the relationship definition between categories.
 // children: Indicates that a category is a child to `parents` in the relationship definition between categories.
-#[easy_settings(rel(parents(), children(..)))]
+#[easy_settings(rel(parents("AAA"), children("BBB")))]
 struct Example {}
 ```
 
 #### Fields
 
 ```rust
+#[derive(Clone, easy_settings::Registry)]
 #[easy_settings(categories("AAA", "BBB", "..."))]
 struct Example {
     // Specifies the initial value of the setting.
