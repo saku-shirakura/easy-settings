@@ -21,7 +21,7 @@ pub enum Combo {
 }
 use chrono::{DateTime, Local};
 use serde::{Deserialize, Serialize};
-use easy_settings_derive::Registry;
+use easy_settings::Registry;
 
 #[derive(Clone, Registry, PartialEq, Debug)]
 #[easy_settings(categories(
