@@ -40,6 +40,7 @@ impl SettingValue {
     }
 }
 
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub enum RegistryNode {
     Category(&'static str),
     SettingItem(&'static str),
@@ -71,7 +72,9 @@ impl RegistryNode {
 pub trait Registry: Default + Clone {
     fn set(&mut self, key: &str, value: SettingValue);
 
-    fn set_from_row(&mut self, row: SettingRow);
+    fn set_from_row(&mut self, row: SettingRow) {
+        self.set(&*row.setting_key, SettingValue::from_raw_string(row.value))
+    }
 
     fn set_from_row_vec(&mut self, row: Vec<SettingRow>) {
         row.into_iter().for_each(|x| self.set_from_row(x))
