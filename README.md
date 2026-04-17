@@ -41,7 +41,7 @@ pub struct RegistryExample {
     #[easy_settings(categories("Category1"))]
     pub ccc: Option<i64>,
     #[easy_settings(categories("Category2"))]
-    pubddd: Option<i64>,
+    pub ddd: Option<i64>,
     #[easy_settings(categories("Category4"))]
     pub eee: Option<i64>,
 }
