@@ -1,7 +1,8 @@
 mod auto_impl;
 mod manual_impl;
 use chrono::DateTime;
-use easy_settings::{Registry, SettingManager, SettingManagerBuilder, SettingValue};
+use easy_settings::sqlite::{SettingManager, SettingManagerBuilder};
+use easy_settings::{Registry, SettingValue};
 use sqlx::{query, Row, SqlitePool};
 use std::str::FromStr;
 use std::sync::Arc;

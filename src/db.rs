@@ -1,5 +1,5 @@
 use serde::de::DeserializeOwned;
-use sqlx::{migrate, FromRow, SqliteConnection};
+use sqlx::FromRow;
 use tracing_unwrap::ResultExt;
 
 #[derive(FromRow)]
@@ -24,6 +24,7 @@ impl SettingRow {
     }
 }
 
-pub async fn migrate(conn: &mut SqliteConnection) -> Result<(), migrate::MigrateError> {
-    migrate!().run(conn).await
+#[cfg(feature = "sqlite")]
+pub async fn migrate(conn: &mut sqlx::SqliteConnection) -> Result<(), sqlx::migrate::MigrateError> {
+     sqlx::migrate!().run(conn).await
 }

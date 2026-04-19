@@ -58,10 +58,12 @@ If using a different store, you can operate using only `Registry` without using 
 pub struct RegistryExample {
     aaa: Option<i64>,
 }
+
+#[cfg(feature = "sqlite")]
 async fn example() -> Result<(), Box<dyn std::error::Error>> {
     // Setting Manager (The setting registry can be saved to SqliteDB via this.)
-    let mut manager: easy_settings::SettingManager<RegistryExample> =
-        easy_settings::SettingManagerBuilder::<RegistryExample>::default().build()?;
+    let mut manager: easy_settings::sqlite::SettingManager<RegistryExample> =
+        easy_settings::sqlite::SettingManagerBuilder::<RegistryExample>::default().build()?;
 
     // The initial value of the setting is None.
     assert_eq!(manager.get_registry().get_aaa(), None);

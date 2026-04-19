@@ -2,14 +2,17 @@
 
 mod db;
 mod registry;
-mod setting_manager;
+mod setting_managers;
 
 #[doc= include_str!("../docs/en/Registry_Derive/details.md")]
 pub use easy_settings_derive::Registry;
 
-pub use setting_manager::SettingManager;
-pub use setting_manager::SettingManagerBuilder;
-pub use setting_manager::SettingManagerBuilderError;
+#[cfg(feature = "sqlite")]
+pub mod sqlite {
+    pub use crate::setting_managers::sqlite::SettingManager;
+    pub use crate::setting_managers::sqlite::SettingManagerBuilder;
+    pub use crate::setting_managers::sqlite::SettingManagerBuilderError;
+}
 
 pub use db::SettingRow;
 

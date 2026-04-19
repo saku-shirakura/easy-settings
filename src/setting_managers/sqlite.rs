@@ -39,7 +39,7 @@ async fn migrate_pool(pool: Arc<SqlitePool>) -> Result<(), MigrateError> {
 }
 
 #[derive(Builder)]
-#[doc = include_str!("../docs/en/SettingManager/details.md")]
+#[doc = include_str!("../../docs/en/SettingManager/details.md")]
 pub struct SettingManager<R>
 where
     R: Registry,
@@ -59,9 +59,9 @@ impl<R> SettingManagerBuilder<R>
 where
     R: Registry,
 {
-    #[doc=include_str!("../docs/en/SettingManagerBuilder/tablename.md")]
+    #[doc=include_str!("../../docs/en/SettingManagerBuilder/tablename.md")]
     #[doc = "```sql"]
-    #[doc=include_str!("../migrations/20260412100221_easy_settings_create_settings_table_Yz4Gc.sql")]
+    #[doc=include_str!("../../migrations/20260412100221_easy_settings_create_settings_table_Yz4Gc.sql")]
     #[doc = "```"]
     pub fn tablename(&mut self, tablename: impl Into<String>, pool: Arc<SqlitePool>) -> &mut Self {
         self.tablename = Some(tablename.into());
@@ -69,7 +69,7 @@ where
         self
     }
 
-    #[doc=include_str!("../docs/en/SettingManagerBuilder/db_pool.md")]
+    #[doc=include_str!("../../docs/en/SettingManagerBuilder/db_pool.md")]
     pub async fn db_pool(&mut self, pool: Option<Arc<SqlitePool>>) -> &mut Self {
         self.pool = Some(pool);
         if self.tablename.is_none() {
@@ -88,7 +88,7 @@ impl<R> SettingManager<R>
 where
     R: Registry,
 {
-    #[doc=include_str!("../docs/en/SettingManager/load_all.md")]
+    #[doc=include_str!("../../docs/en/SettingManager/load_all.md")]
     pub async fn load_all(&mut self) -> sqlx::Result<()> {
         let reg: Vec<SettingRow> = sqlx::query_as(&format!("SELECT * FROM {}", self.tablename))
             .fetch_all(&mut *self.get_pool().await.acquire().await?)
@@ -98,7 +98,7 @@ where
         Ok(())
     }
 
-    #[doc=include_str!("../docs/en/SettingManager/load.md")]
+    #[doc=include_str!("../../docs/en/SettingManager/load.md")]
     pub async fn load(&mut self, key: &str) -> sqlx::Result<()> {
         let reg: Vec<SettingRow> = sqlx::query_as(&format!(
             "SELECT * FROM {} WHERE setting_key = ?",
@@ -112,7 +112,7 @@ where
         Ok(())
     }
 
-    #[doc=include_str!("../docs/en/SettingManager/save.md")]
+    #[doc=include_str!("../../docs/en/SettingManager/save.md")]
     pub async fn save(&mut self) -> Result<(), Box<dyn Error>> {
         let x: Vec<(&str, SettingValue)> = self
             .registry_tmp
@@ -136,22 +136,22 @@ where
         Ok(())
     }
 
-    #[doc=include_str!("../docs/en/SettingManager/reset_tmp.md")]
+    #[doc=include_str!("../../docs/en/SettingManager/reset_tmp.md")]
     pub fn reset_tmp(&mut self) {
         self.registry_tmp = self.registry.clone();
     }
 
-    #[doc=include_str!("../docs/en/SettingManager/get_tmp_registry.md")]
+    #[doc=include_str!("../../docs/en/SettingManager/get_tmp_registry.md")]
     pub fn get_tmp_registry(&mut self) -> &mut R {
         &mut self.registry_tmp
     }
 
-    #[doc=include_str!("../docs/en/SettingManager/get_registry.md")]
+    #[doc=include_str!("../../docs/en/SettingManager/get_registry.md")]
     pub fn get_registry(&self) -> &R {
         &self.registry
     }
 
-    #[doc=include_str!("../docs/en/SettingManager/set_pool.md")]
+    #[doc=include_str!("../../docs/en/SettingManager/set_pool.md")]
     pub async fn set_pool(&mut self, pool: Option<Arc<SqlitePool>>) {
         self.pool = pool;
         migrate_pool(self.get_pool().await).await.unwrap_or_log();
