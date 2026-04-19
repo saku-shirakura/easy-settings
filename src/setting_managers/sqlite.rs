@@ -189,13 +189,13 @@ where
 
     #[doc = include_str!("../../docs/en/SettingManager/save_and_apply.md")]
     pub async fn save_and_apply(&mut self) -> sqlx::Result<()> {
-        self.save().await?;
+        self.clone().save().await?;
         self.apply();
         Ok(())
     }
 
     #[doc = include_str!("../../docs/en/SettingManager/save.md")]
-    pub async fn save(&self) -> sqlx::Result<()> {
+    pub async fn save(self) -> sqlx::Result<()> {
         update_applicable_status(self.manager_id, false);
         let x: Vec<(&str, SettingValue)> = self
             .registry_tmp
