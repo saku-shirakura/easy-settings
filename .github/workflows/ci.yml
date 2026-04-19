@@ -25,6 +25,6 @@ jobs:
             . -> target
             derive -> target
       - name: Build
-        run: cargo build --verbose
+        run: cargo build --all-features --verbose
       - name: Run tests
-        run: cargo test --workspace --verbose
+        run: cargo test --workspace --all-features --verbose
