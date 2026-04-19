@@ -72,7 +72,7 @@ async fn example() -> Result<(), Box<dyn std::error::Error>> {
     manager.get_tmp_registry().set_aaa(Some(0));
 
     // After making changes, you can apply the changes by executing `save()`.
-    manager.save().await?;
+    manager.save_and_apply().await?;
 
     // When applied, the setting value will also become Some(0).
     assert_eq!(manager.get_registry().get_aaa(), Some(0));
