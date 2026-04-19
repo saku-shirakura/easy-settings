@@ -41,3 +41,7 @@ chrono = { version = "0.4", features = ["serde"] }
 [[test]]
 name = "test"
 required-features = ["sqlite", "tokio"]
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
