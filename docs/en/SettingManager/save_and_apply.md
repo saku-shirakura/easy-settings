@@ -1,0 +1,1 @@
+The settings will be saved to the database and applied.
