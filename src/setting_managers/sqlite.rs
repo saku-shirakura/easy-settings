@@ -11,6 +11,8 @@ use std::sync::{Arc, LazyLock, OnceLock, RwLock};
 use tracing::{warn, warn_span};
 use tracing_unwrap::ResultExt;
 
+const DEFAULT_TABLE_NAME: &str = "settings__easy_settings_Yz4Gc";
+
 static APPLICABLE_STATUS: LazyLock<RwLock<HashMap<u64, bool>>> =
     LazyLock::new(|| RwLock::new(HashMap::new()));
 static NEXT_MANAGER_ID: LazyLock<RwLock<u64>> = LazyLock::new(|| RwLock::new(0));
@@ -47,6 +49,34 @@ fn issue_manager_id() -> u64 {
 }
 
 static DEFAULT_DATABASE_POOL: OnceLock<Arc<SqlitePool>> = OnceLock::new();
+static DATABASE_POOLS: LazyLock<RwLock<HashMap<u64, Arc<SqlitePool>>>> =
+    LazyLock::new(|| RwLock::new(HashMap::new()));
+static NEXT_POOL_ID: LazyLock<RwLock<u64>> = LazyLock::new(|| RwLock::new(0));
+
+fn register_database_pool(pool: Arc<SqlitePool>) -> u64 {
+    match NEXT_POOL_ID.write().ok_or_log().as_mut() {
+        None => {
+            panic!("[easy_settings::sqlite::add_database_pool] Lock Failed")
+        }
+        Some(x) => {
+            DATABASE_POOLS.write().unwrap_or_log().insert(**x, pool);
+            x.add_assign(1);
+            x.sub(1)
+        }
+    }
+}
+
+async fn get_database_pool(id: &Option<u64>) -> Arc<SqlitePool> {
+    match id.as_ref().and_then(|id| {
+        DATABASE_POOLS
+            .read()
+            .ok_or_log()
+            .and_then(|x| x.get(id).cloned())
+    }) {
+        None => default_database_pool().await,
+        Some(x) => x,
+    }
+}
 
 #[tracing::instrument]
 async fn default_database_pool() -> Arc<SqlitePool> {
@@ -90,7 +120,7 @@ where
     #[builder(setter(custom))]
     tablename: String,
     #[builder(default = Default::default(), setter(custom))]
-    pool: Option<Arc<SqlitePool>>,
+    pool_id: Option<u64>,
     #[builder(setter(skip))]
     manager_id: u64,
 }
@@ -105,20 +135,17 @@ where
     #[doc = "```"]
     pub fn tablename(&mut self, tablename: impl Into<String>, pool: Arc<SqlitePool>) -> &mut Self {
         self.tablename = Some(tablename.into());
-        self.pool = Some(Some(pool));
+        self.pool_id = Some(Some(register_database_pool(pool)));
         self
     }
 
     #[doc = include_str!("../../docs/en/SettingManagerBuilder/db_pool.md")]
     pub async fn db_pool(&mut self, pool: Option<Arc<SqlitePool>>) -> &mut Self {
-        self.pool = Some(pool);
+        self.pool_id = Some(pool.map(|x| register_database_pool(x)));
         if self.tablename.is_none() {
-            migrate_pool(match self.pool.as_ref() {
-                None | Some(None) => default_database_pool().await,
-                Some(Some(x)) => x.clone(),
-            })
-            .await
-            .unwrap_or_log();
+            migrate_pool(get_database_pool(&self.pool_id.clone().and_then(|x| x)).await)
+                .await
+                .unwrap_or_log();
         }
         self
     }
@@ -160,8 +187,6 @@ where
         Ok(())
     }
 
-    #[doc=include_str!("../../docs/en/SettingManager/save.md")]
-    pub async fn save(&mut self) -> Result<(), Box<dyn Error>> {
     #[doc = include_str!("../../docs/en/SettingManager/save_and_apply.md")]
     pub async fn save_and_apply(&mut self) -> sqlx::Result<()> {
         self.save().await?;
@@ -227,15 +252,14 @@ where
 
     #[doc = include_str!("../../docs/en/SettingManager/set_pool.md")]
     pub async fn set_pool(&mut self, pool: Option<Arc<SqlitePool>>) {
-        self.pool = pool;
-        migrate_pool(self.get_pool().await).await.unwrap_or_log();
+        self.pool_id = pool.map(|x| register_database_pool(x));
+        if self.tablename == DEFAULT_TABLE_NAME {
+            migrate_pool(self.get_pool().await).await.unwrap_or_log();
+        }
         update_applicable_status(self.manager_id, false);
     }
 
     async fn get_pool(&self) -> Arc<SqlitePool> {
-        match self.pool.clone() {
-            None => default_database_pool().await,
-            Some(x) => x,
-        }
+        get_database_pool(&self.pool_id).await
     }
 }
