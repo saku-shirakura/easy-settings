@@ -87,7 +87,7 @@ async fn derive_implementation_test() {
         .get_tmp_registry()
         .set_combo(Some(manual_impl::Combo::A));
     let manual_before_apply = manual_manager.get_tmp_registry().clone();
-    manual_manager.save().await.unwrap();
+    manual_manager.save_and_apply().await.unwrap();
 
     // derive
     auto_manager.get_tmp_registry().set_integer(Some(90));
@@ -111,7 +111,7 @@ async fn derive_implementation_test() {
         .get_tmp_registry()
         .set_combo(Some(auto_impl::Combo::A));
     let auto_before_apply = auto_manager.get_tmp_registry().clone();
-    auto_manager.save().await.unwrap();
+    auto_manager.save_and_apply().await.unwrap();
 
     // Check Db
 
