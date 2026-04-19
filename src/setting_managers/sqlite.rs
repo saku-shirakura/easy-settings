@@ -105,7 +105,7 @@ async fn migrate_pool(pool: Arc<SqlitePool>) -> Result<(), MigrateError> {
     migrate(&mut pool.acquire().await.unwrap_or_log()).await
 }
 
-#[derive(Builder)]
+#[derive(Builder, Clone)]
 #[doc = include_str!("../../docs/en/SettingManager/details.md")]
 #[builder(build_fn(private, name = "build_"))]
 pub struct SettingManager<R>
