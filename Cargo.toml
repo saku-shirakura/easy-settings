@@ -18,7 +18,7 @@ tokio = ["sqlx/runtime-tokio"]
 members = ["derive"]
 
 [workspace.package]
-version = "0.2.0-dev"
+version = "0.2.0"
 edition = "2024"
 license = "MIT"
 authors = ["saku-shirakura<saku@sakushira.com>"]
