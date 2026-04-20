@@ -66,43 +66,45 @@ fn register_database_pool(pool: Arc<SqlitePool>) -> u64 {
     }
 }
 
-async fn get_database_pool(id: &Option<u64>) -> Arc<SqlitePool> {
-    match id.as_ref().and_then(|id| {
-        DATABASE_POOLS
-            .read()
-            .ok_or_log()
-            .and_then(|x| x.get(id).cloned())
-    }) {
-        None => default_database_pool().await,
-        Some(x) => x,
-    }
-}
-
-#[tracing::instrument]
-async fn default_database_pool() -> Arc<SqlitePool> {
-    match DEFAULT_DATABASE_POOL.get() {
-        None => {
-            let x = Arc::new(
-                SqlitePool::connect_with(
-                    SqliteConnectOptions::new()
-                        .filename("settings.db")
-                        .foreign_keys(true)
-                        .create_if_missing(true),
-                )
-                .await
-                .unwrap_or_log(),
-            );
-            DEFAULT_DATABASE_POOL.set(x.clone()).unwrap_or_log();
-            migrate_pool(x.clone()).await.unwrap_or_log();
-            x
+fn get_database_pool(id: &Option<u64>) -> impl Future<Output = Arc<SqlitePool>> + Send {
+    async move {
+        match id.as_ref().and_then(|id| {
+            DATABASE_POOLS
+                .read()
+                .ok_or_log()
+                .and_then(|x| x.get(id).cloned())
+        }) {
+            None => default_database_pool().await,
+            Some(x) => x,
         }
-        Some(x) => x.clone(),
     }
 }
 
-#[tracing::instrument]
-async fn migrate_pool(pool: Arc<SqlitePool>) -> Result<(), MigrateError> {
-    migrate(&mut pool.acquire().await.unwrap_or_log()).await
+fn default_database_pool() -> impl Future<Output = Arc<SqlitePool>> + Send {
+    async move {
+        match DEFAULT_DATABASE_POOL.get() {
+            None => {
+                let x = Arc::new(
+                    SqlitePool::connect_with(
+                        SqliteConnectOptions::new()
+                            .filename("settings.db")
+                            .foreign_keys(true)
+                            .create_if_missing(true),
+                    )
+                    .await
+                    .unwrap_or_log(),
+                );
+                DEFAULT_DATABASE_POOL.set(x.clone()).unwrap_or_log();
+                migrate_pool(x.clone()).await.unwrap_or_log();
+                x
+            }
+            Some(x) => x.clone(),
+        }
+    }
+}
+
+fn migrate_pool(pool: Arc<SqlitePool>) -> impl Future<Output = Result<(), MigrateError>> + Send {
+    async move { migrate(pool).await }
 }
 
 #[derive(Builder, Clone)]
@@ -110,7 +112,7 @@ async fn migrate_pool(pool: Arc<SqlitePool>) -> Result<(), MigrateError> {
 #[builder(build_fn(private, name = "build_"))]
 pub struct SettingManager<R>
 where
-    R: Registry,
+    R: Registry + Sync + Send,
 {
     #[builder(default = R::default(), setter(skip))]
     registry: R,
@@ -127,7 +129,7 @@ where
 
 impl<R> SettingManagerBuilder<R>
 where
-    R: Registry,
+    R: Registry + Sync + Send,
 {
     #[doc = include_str!("../../docs/en/SettingManagerBuilder/tablename.md")]
     #[doc = "```sql"]
@@ -140,14 +142,19 @@ where
     }
 
     #[doc = include_str!("../../docs/en/SettingManagerBuilder/db_pool.md")]
-    pub async fn db_pool(&mut self, pool: Option<Arc<SqlitePool>>) -> &mut Self {
-        self.pool_id = Some(pool.map(|x| register_database_pool(x)));
-        if self.tablename.is_none() {
-            migrate_pool(get_database_pool(&self.pool_id.clone().and_then(|x| x)).await)
-                .await
-                .unwrap_or_log();
+    pub fn db_pool(
+        &mut self,
+        pool: Option<Arc<SqlitePool>>,
+    ) -> impl Future<Output = &mut Self> + Send {
+        async move {
+            self.pool_id = Some(pool.map(|x| register_database_pool(x)));
+            if self.tablename.is_none() {
+                migrate_pool(get_database_pool(&self.pool_id.clone().and_then(|x| x)).await)
+                    .await
+                    .unwrap_or_log();
+            }
+            self
         }
-        self
     }
 
     pub fn build(&self) -> Result<SettingManager<R>, SettingManagerBuilderError> {
@@ -159,64 +166,72 @@ where
 
 impl<R> SettingManager<R>
 where
-    R: Registry,
+    R: Registry + Sync + Send,
 {
     #[doc = include_str!("../../docs/en/SettingManager/load_all.md")]
-    pub async fn load_all(&mut self) -> sqlx::Result<()> {
-        update_applicable_status(self.manager_id, false);
-        let reg: Vec<SettingRow> = sqlx::query_as(&format!("SELECT * FROM {}", self.tablename))
-            .fetch_all(&mut *self.get_pool().await.acquire().await?)
-            .await?;
-        self.registry.set_from_row_vec(reg);
-        self.reset_tmp();
-        Ok(())
+    pub fn load_all(&mut self) -> impl Future<Output = sqlx::Result<()>> + Send {
+        async move {
+            update_applicable_status(self.manager_id, false);
+            let reg: Vec<SettingRow> = sqlx::query_as(&format!("SELECT * FROM {}", self.tablename))
+                .fetch_all(&mut *self.get_pool().await.acquire().await?)
+                .await?;
+            self.registry.set_from_row_vec(reg);
+            self.reset_tmp();
+            Ok(())
+        }
     }
 
     #[doc = include_str!("../../docs/en/SettingManager/load.md")]
-    pub async fn load(&mut self, key: &str) -> sqlx::Result<()> {
-        update_applicable_status(self.manager_id, false);
-        let reg: Vec<SettingRow> = sqlx::query_as(&format!(
-            "SELECT * FROM {} WHERE setting_key = ?",
-            self.tablename
-        ))
-        .bind(key)
-        .fetch_all(&mut *self.get_pool().await.acquire().await?)
-        .await?;
-        self.registry.set_from_row_vec(reg);
-        self.reset_tmp();
-        Ok(())
+    pub fn load(&mut self, key: &str) -> impl Future<Output = sqlx::Result<()>> + Send {
+        async move {
+            update_applicable_status(self.manager_id, false);
+            let reg: Vec<SettingRow> = sqlx::query_as(&format!(
+                "SELECT * FROM {} WHERE setting_key = ?",
+                self.tablename
+            ))
+            .bind(key)
+            .fetch_all(&mut *self.get_pool().await.acquire().await?)
+            .await?;
+            self.registry.set_from_row_vec(reg);
+            self.reset_tmp();
+            Ok(())
+        }
     }
 
     #[doc = include_str!("../../docs/en/SettingManager/save_and_apply.md")]
-    pub async fn save_and_apply(&mut self) -> sqlx::Result<()> {
-        self.clone().save().await?;
-        self.apply();
-        Ok(())
+    pub fn save_and_apply(&mut self) -> impl Future<Output = sqlx::Result<()>> + Send {
+        async move {
+            self.clone().save().await?;
+            self.apply();
+            Ok(())
+        }
     }
 
     #[doc = include_str!("../../docs/en/SettingManager/save.md")]
-    pub async fn save(self) -> sqlx::Result<()> {
-        update_applicable_status(self.manager_id, false);
-        let x: Vec<(&str, SettingValue)> = self
-            .registry_tmp
-            .items()
-            .into_iter()
-            .filter(|(k, v)| match self.registry.get(k) {
-                None => true,
-                Some(x) => x != *v,
-            })
-            .collect();
-        let mut conn = self.get_pool().await.acquire().await?;
-        let mut tx = conn.begin().await?;
-        for (k, v) in x {
-            query(&format!(
-                "INSERT INTO {} (setting_key, value) VALUES (?1, ?2) ON CONFLICT DO UPDATE SET setting_key = ?1, value = ?2;",
-                self.tablename)
-            ).bind(k).bind(v.raw_string()).execute(&mut *tx).await?;
+    pub fn save(&self) -> impl Future<Output = sqlx::Result<()>> + Send {
+        async move {
+            update_applicable_status(self.manager_id, false);
+            let x: Vec<(&str, SettingValue)> = self
+                .registry_tmp
+                .items()
+                .into_iter()
+                .filter(|(k, v)| match self.registry.get(k) {
+                    None => true,
+                    Some(x) => x != *v,
+                })
+                .collect();
+            let mut conn = self.get_pool().await.acquire().await?;
+            let mut tx = conn.begin().await?;
+            for (k, v) in x {
+                query(&format!(
+                    "INSERT INTO {} (setting_key, value) VALUES (?1, ?2) ON CONFLICT DO UPDATE SET setting_key = ?1, value = ?2;",
+                    self.tablename)
+                ).bind(k).bind(v.raw_string()).execute(&mut *tx).await?;
+            }
+            tx.commit().await?;
+            update_applicable_status(self.manager_id, true);
+            Ok(())
         }
-        tx.commit().await?;
-        update_applicable_status(self.manager_id, true);
-        Ok(())
     }
 
     #[doc = include_str!("../../docs/en/SettingManager/apply.md")]
@@ -251,15 +266,17 @@ where
     }
 
     #[doc = include_str!("../../docs/en/SettingManager/set_pool.md")]
-    pub async fn set_pool(&mut self, pool: Option<Arc<SqlitePool>>) {
-        self.pool_id = pool.map(|x| register_database_pool(x));
-        if self.tablename == DEFAULT_TABLE_NAME {
-            migrate_pool(self.get_pool().await).await.unwrap_or_log();
+    pub fn set_pool(&mut self, pool: Option<Arc<SqlitePool>>) -> impl Future + Send {
+        async {
+            self.pool_id = pool.map(|x| register_database_pool(x));
+            if self.tablename == DEFAULT_TABLE_NAME {
+                migrate_pool(self.get_pool().await).await.unwrap_or_log();
+            }
+            update_applicable_status(self.manager_id, false);
         }
-        update_applicable_status(self.manager_id, false);
     }
 
-    async fn get_pool(&self) -> Arc<SqlitePool> {
-        get_database_pool(&self.pool_id).await
+    fn get_pool(&self) -> impl Future<Output = Arc<SqlitePool>> + Send {
+        async { get_database_pool(&self.pool_id).await }
     }
 }

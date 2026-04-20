@@ -34,6 +34,23 @@ fn auto_to_manual(reg: auto_impl::RegistryExample) -> manual_impl::RegistryExamp
     }
 }
 
+#[test]
+fn test_trait_send() {
+    let x: SettingManager<auto_impl::RegistryExample> =
+        SettingManagerBuilder::default().build().unwrap();
+    tokio::runtime::Builder::new_multi_thread()
+        .enable_all()
+        .build()
+        .unwrap()
+        .block_on(async {
+            tokio::spawn(async move {
+                x.save().await.unwrap();
+            })
+            .await
+            .unwrap()
+        });
+}
+
 #[tokio::test]
 async fn derive_implementation_test() {
     let pool = Arc::new(SqlitePool::connect(":memory:").await.unwrap());

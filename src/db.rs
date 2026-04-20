@@ -1,5 +1,7 @@
 use serde::de::DeserializeOwned;
-use sqlx::FromRow;
+use sqlx::{FromRow, SqlitePool};
+use std::ops::Deref;
+use std::sync::Arc;
 use tracing_unwrap::ResultExt;
 
 #[derive(FromRow)]
@@ -25,6 +27,8 @@ impl SettingRow {
 }
 
 #[cfg(feature = "sqlite")]
-pub async fn migrate(conn: &mut sqlx::SqliteConnection) -> Result<(), sqlx::migrate::MigrateError> {
-     sqlx::migrate!().run(conn).await
+pub fn migrate(
+    conn: Arc<SqlitePool>,
+) -> impl Future<Output = Result<(), sqlx::migrate::MigrateError>> + Send {
+    async move { sqlx::migrate!().run(conn.deref()).await }
 }

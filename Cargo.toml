@@ -35,7 +35,7 @@ tracing = "0.1"
 derive_builder = "0.20"
 
 [dev-dependencies]
-tokio = { version = "1", features = ["macros"] }
+tokio = { version = "1", features = ["macros", "rt", "rt-multi-thread"] }
 chrono = { version = "0.4", features = ["serde"] }
 
 [[test]]
