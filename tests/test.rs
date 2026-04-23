@@ -316,4 +316,37 @@ async fn derive_implementation_test() {
     assert_eq!(man_reg.get_combo(), Some(manual_impl::Combo::A));
     man_reg.set_combo(None);
     assert_eq!(man_reg.get_combo(), None);
+    for key in auto_impl::RegistryExample::keys() {
+        if ["object", "array", "combo"].contains(key) {
+            continue;
+        }
+        assert_eq!(
+            auto_impl::RegistryExample::get_item_type(key),
+            manual_impl::RegistryExample::get_item_type(key)
+        );
+    }
+    assert_eq!(
+        auto_impl::RegistryExample::get_item_type("object"),
+        Some(std::any::TypeId::of::<auto_impl::Object>())
+    );
+    assert_eq!(
+        auto_impl::RegistryExample::get_item_type("array"),
+        Some(std::any::TypeId::of::<Vec<auto_impl::Object>>())
+    );
+    assert_eq!(
+        auto_impl::RegistryExample::get_item_type("combo"),
+        Some(std::any::TypeId::of::<auto_impl::Combo>())
+    );
+    assert_eq!(
+        manual_impl::RegistryExample::get_item_type("object"),
+        Some(std::any::TypeId::of::<manual_impl::Object>())
+    );
+    assert_eq!(
+        manual_impl::RegistryExample::get_item_type("array"),
+        Some(std::any::TypeId::of::<Vec<manual_impl::Object>>())
+    );
+    assert_eq!(
+        manual_impl::RegistryExample::get_item_type("combo"),
+        Some(std::any::TypeId::of::<manual_impl::Combo>())
+    );
 }
