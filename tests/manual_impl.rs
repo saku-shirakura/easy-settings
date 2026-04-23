@@ -19,9 +19,11 @@ pub enum Combo {
     B,
     C,
 }
+
 use chrono::{DateTime, Local};
-use serde::{Deserialize, Serialize};
 use easy_settings::{Registry, RegistryNode, SettingValue};
+use serde::{Deserialize, Serialize};
+use std::any::TypeId;
 
 #[derive(Clone, Debug, PartialEq, Default)]
 // Root ┄ object, array, datetime, combo
@@ -143,6 +145,20 @@ impl Registry for RegistryExample {
             "bool" => SettingValue::from(self.bool.as_ref()),
             "combo" => SettingValue::from(self.combo.as_ref()),
             &_ => return None,
+        })
+    }
+
+    fn get_item_type(key: &str) -> Option<TypeId> {
+        Some(match key {
+            "integer" => TypeId::of::<i64>(),
+            "float" => TypeId::of::<f64>(),
+            "abc" => TypeId::of::<String>(),
+            "object" => TypeId::of::<Object>(),
+            "array" => TypeId::of::<Vec<Object>>(),
+            "datetime" => TypeId::of::<DateTime<Local>>(),
+            "bool" => TypeId::of::<bool>(),
+            "combo" => TypeId::of::<Combo>(),
+            _ => return None,
         })
     }
 

@@ -1,3 +1,4 @@
+use std::any::TypeId;
 use crate::db::SettingRow;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
@@ -101,6 +102,9 @@ pub trait Registry: Default + Clone {
             .map(|x| (*x, self.get(x).unwrap()))
             .collect()
     }
+
+    #[doc=include_str!("../docs/en/Registry_Trait/get_item_type.md")]
+    fn get_item_type(key: &str) -> Option<TypeId>;
 
     #[doc=include_str!("../docs/en/Registry_Trait/keys.md")]
     fn keys() -> &'static [&'static str];
