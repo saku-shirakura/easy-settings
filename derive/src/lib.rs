@@ -31,7 +31,19 @@ fn registry_derive_impl(input: DeriveInput) -> Result<TokenStream, Error> {
         })
     }).transpose_into_fallible().collect::<Vec<_>>()?;
 
-    let field_name1 = field_attributes.iter().map(|(_x, y)| y.get_field_name());
+    let get_item_type_match_pattern = field_attributes
+        .values()
+        .map(|x| {
+            let inner_type = require_option(&x.ty)?;
+            let name = x.get_field_name();
+            Ok::<_, Error>(quote::quote! {
+                #name => std::any::TypeId::of::<#inner_type>(),
+            })
+        })
+        .transpose_into_fallible()
+        .collect::<Vec<_>>()?;
+
+    let field_name1 = field_attributes.values().map(|x| x.get_field_name());
     let field_name2 = field_name1.clone();
     let setting_keys = field_name1.clone();
     let categories = struct_attributes.categories.iter();
@@ -68,57 +80,64 @@ fn registry_derive_impl(input: DeriveInput) -> Result<TokenStream, Error> {
     });
 
     Ok(quote::quote! {
-            impl #struct_ident {
-                #(#setter_getter_functions)*
-            }
+        impl #struct_ident {
+            #(#setter_getter_functions)*
+        }
 
-            impl std::default::Default for #struct_ident {
-                fn default() -> Self {
-                    Self {
-                        #(#field_ident1: std::option::Option::None),*
-                    }
+        impl std::default::Default for #struct_ident {
+            fn default() -> Self {
+                Self {
+                    #(#field_ident1: std::option::Option::None),*
                 }
             }
+        }
 
-            impl easy_settings::Registry for #struct_ident {
-                fn set(&mut self, key: &str, value: easy_settings::SettingValue) {
-                    match key {
-                        #(#field_name1 => self.#setter_field_name(value.into()),)*
-                        &_ => {}
-                    }
-                }
-
-                fn get(&self, key: &str) -> std::option::Option<easy_settings::SettingValue> {
-                    std::option::Option::Some(match key {
-                        #(#field_name2 => easy_settings::SettingValue::from(self.#field_ident2.as_ref()),)*
-                        &_ => return std::option::Option::None,
-                    })
-                }
-
-                fn keys() -> &'static [&'static str] {
-                    &[
-                        #(#setting_keys),*
-                    ]
-                }
-
-                fn categories() -> &'static [&'static str] {
-                    &[
-                        #(#categories),*
-                    ]
-                }
-
-                fn child_nodes(parent_node: std::option::Option<&str>) -> &'static [easy_settings::RegistryNode] {
-                    match parent_node {
-                        std::option::Option::None => &[
-                            #(#root_nodes),*
-                        ],
-                        std::option::Option::Some(x) => match x {
-                            #(#children_nodes,)*
-                            &_ => &[],
-                        },
-                    }
+        impl easy_settings::Registry for #struct_ident {
+            fn set(&mut self, key: &str, value: easy_settings::SettingValue) {
+                match key {
+                    #(#field_name1 => self.#setter_field_name(value.into()),)*
+                    &_ => {}
                 }
             }
+
+            fn get(&self, key: &str) -> std::option::Option<easy_settings::SettingValue> {
+                std::option::Option::Some(match key {
+                    #(#field_name2 => easy_settings::SettingValue::from(self.#field_ident2.as_ref()),)*
+                    &_ => return std::option::Option::None,
+                })
+            }
+
+            fn get_item_type(key: &str) -> std::option::Option<std::any::TypeId> {
+                Some(match key {
+                    #(#get_item_type_match_pattern)*
+                    &_ => return std::option::Option::None,
+                })
+            }
+
+            fn keys() -> &'static [&'static str] {
+                &[
+                    #(#setting_keys),*
+                ]
+            }
+
+            fn categories() -> &'static [&'static str] {
+                &[
+                    #(#categories),*
+                ]
+            }
+
+            fn child_nodes(parent_node: std::option::Option<&str>) -> &'static [easy_settings::RegistryNode] {
+                match parent_node {
+                    std::option::Option::None => &[
+                        #(#root_nodes),*
+                    ],
+                    std::option::Option::Some(x) => match x {
+                        #(#children_nodes,)*
+                        &_ => &[],
+                    },
+                }
+            }
+        }
         }.into())
 }
 
