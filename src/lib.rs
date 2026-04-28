@@ -20,3 +20,22 @@ pub use db::SettingRow;
 pub use registry::Registry;
 pub use registry::RegistryNode;
 pub use registry::SettingValue;
+
+pub mod re_export {
+    pub mod serde {
+        pub use serde::de::DeserializeOwned;
+        pub use serde::Deserialize;
+        pub use serde::Serialize;
+    }
+
+    #[cfg(feature = "sqlx")]
+    pub mod sqlx {
+        #[cfg(feature = "sqlite")]
+        pub mod sqlite {
+            pub use sqlx::SqlitePool;
+        }
+
+        pub use sqlx::Error;
+        pub use sqlx::Result;
+    }
+}

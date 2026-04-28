@@ -1,8 +1,8 @@
 use serde::de::DeserializeOwned;
-use sqlx::FromRow;
 use tracing_unwrap::ResultExt;
 
-#[derive(FromRow, Clone)]
+#[cfg_attr(feature = "sqlx", derive(sqlx::FromRow))]
+#[derive(Clone)]
 #[doc=include_str!("../docs/en/SettingRow/details.md")]
 #[doc = "```sql"]
 #[doc=include_str!("../migrations/20260412100221_easy_settings_create_settings_table_Yz4Gc.sql")]

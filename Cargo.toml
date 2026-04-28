@@ -11,8 +11,8 @@ categories = ["config"]
 keywords = ["settings"]
 
 [features]
-sqlite = ["sqlx/sqlite"]
-tokio = ["sqlx/runtime-tokio"]
+sqlx = ["dep:sqlx"]
+sqlite = ["sqlx", "sqlx/sqlite"]
 
 [workspace]
 members = ["derive"]
@@ -26,9 +26,9 @@ repository = "https://github.com/saku-shirakura/easy-settings"
 rust-version = "1.92"
 
 [dependencies]
-serde = "1"
+serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-sqlx = { version = "0.8", features = ["macros"] }
+sqlx = { version = "0.8", features = ["macros"], optional = true }
 easy-settings-derive = { version = "0.3.0-dev", path = "derive" }
 tracing-unwrap = "1"
 tracing = "0.1"
