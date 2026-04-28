@@ -1,0 +1,1 @@
+The setting value is retrieved from the setting key. If the setting value does not exist, the default value is retrieved.

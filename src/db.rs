@@ -1,6 +1,7 @@
 use serde::de::DeserializeOwned;
 use tracing_unwrap::ResultExt;
 
+#[doc = include_str!("../docs/en/IntoSettingRow/details.md")]
 pub trait IntoSettingRow {
     fn into_setting_row(self) -> SettingRow;
 }
