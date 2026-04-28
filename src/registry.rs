@@ -1,7 +1,7 @@
-use std::any::TypeId;
-use crate::db::SettingRow;
+use crate::IntoSettingRow;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
+use std::any::TypeId;
 use tracing_unwrap::ResultExt;
 
 #[derive(PartialEq, Debug)]
@@ -83,12 +83,19 @@ pub trait Registry: Default + Clone {
     fn set(&mut self, key: &str, value: SettingValue);
 
     #[doc=include_str!("../docs/en/Registry_Trait/set_from_row.md")]
-    fn set_from_row(&mut self, row: SettingRow) {
+    fn set_from_row<T>(&mut self, row: T)
+    where
+        T: IntoSettingRow,
+    {
+        let row = row.into_setting_row();
         self.set(&*row.setting_key, SettingValue::from_raw_string(row.value))
     }
 
     #[doc=include_str!("../docs/en/Registry_Trait/set_from_row_vec.md")]
-    fn set_from_row_vec(&mut self, row: Vec<SettingRow>) {
+    fn set_from_row_vec<T>(&mut self, row: Vec<T>)
+    where
+        T: IntoSettingRow,
+    {
         row.into_iter().for_each(|x| self.set_from_row(x))
     }
 
