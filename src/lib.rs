@@ -15,6 +15,7 @@ pub mod sqlite {
     pub use crate::setting_managers::sqlite::SettingManagerBuilderError;
 }
 
+pub use db::IntoSettingRow;
 pub use db::SettingRow;
 
 pub use registry::Registry;
