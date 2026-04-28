@@ -18,7 +18,7 @@ tokio = ["sqlx/runtime-tokio"]
 members = ["derive"]
 
 [workspace.package]
-version = "0.2.2"
+version = "0.3.0-dev"
 edition = "2024"
 license = "MIT"
 authors = ["saku-shirakura<saku@sakushira.com>"]
@@ -29,7 +29,7 @@ rust-version = "1.92"
 serde = "1"
 serde_json = "1"
 sqlx = { version = "0.8", features = ["macros"] }
-easy-settings-derive = { version = "0.2.0", path = "derive" }
+easy-settings-derive = { version = "0.3.0-dev", path = "derive" }
 tracing-unwrap = "1"
 tracing = "0.1"
 derive_builder = "0.20"
