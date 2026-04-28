@@ -13,6 +13,8 @@ keywords = ["settings"]
 [features]
 sqlx = ["dep:sqlx"]
 sqlite = ["sqlx", "sqlx/sqlite"]
+sqlx-runtime-tokio = ["sqlx", "sqlx/runtime-tokio"]
+sqlx-runtime-async-std = ["sqlx", "sqlx/runtime-async-std"]
 
 [workspace]
 members = ["derive"]
@@ -40,7 +42,7 @@ chrono = { version = "0.4", features = ["serde"] }
 
 [[test]]
 name = "test"
-required-features = ["sqlite", "tokio"]
+required-features = ["sqlite", "sqlx-runtime-tokio"]
 
 [package.metadata.docs.rs]
 all-features = true
