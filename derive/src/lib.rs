@@ -12,12 +12,13 @@ mod registry;
 fn registry_derive_impl(input: DeriveInput) -> Result<TokenStream, Error> {
     let struct_ident = &input.ident;
     let (struct_attributes, field_attributes, category_relationships) = registry::parser(&input)?;
-    let setter_getter_functions = field_attributes.values().map(|x| {
+    let (setter_getter_functions, get_with_default_matches) = field_attributes.values().map(|x| {
         let field_type = &x.ty;
         let inner_type = require_option(field_type)?;
         let field_ident = &x.ident;
-        let setter_name = &Ident::new(&format!("set_{}", x.get_field_name()), Span::call_site());
-        let getter_name = &Ident::new(&format!("get_{}", x.get_field_name()), Span::call_site());
+        let field_name = x.get_field_name();
+        let setter_name = &Ident::new(&format!("set_{}", field_name), Span::call_site());
+        let getter_name = &Ident::new(&format!("get_{}", field_name), Span::call_site());
         let getter = if x.attrs.default.is_some() {
             let default = x.attrs.default.as_ref().unwrap();
             quote::quote! {pub fn #getter_name(&self) -> #inner_type { self.#field_ident.clone().unwrap_or_else(|| #default) }}
@@ -25,11 +26,24 @@ fn registry_derive_impl(input: DeriveInput) -> Result<TokenStream, Error> {
             quote::quote! {pub fn #getter_name(&self) -> #field_type { self.#field_ident.clone() }}
         };
 
-        Ok::<_, Error>(quote::quote! {
-            pub fn #setter_name(&mut self, value: #field_type) { self.#field_ident = value; }
-            #getter
-        })
-    }).transpose_into_fallible().collect::<Vec<_>>()?;
+        let get_with_default = if x.attrs.default.is_some() {
+            quote::quote! {
+                #field_name => easy_settings::SettingValue::from(std::option::Option::Some(self.#getter_name()))
+            }
+        } else {
+            quote::quote! {
+                #field_name => easy_settings::SettingValue::from(self.#getter_name())
+            }
+        };
+
+        Ok::<_, Error>((
+            quote::quote! {
+                pub fn #setter_name(&mut self, value: #field_type) { self.#field_ident = value; }
+                #getter
+            },
+            get_with_default,
+        ))
+    }).transpose_into_fallible().collect::<(Vec<_>, Vec<_>)>()?;
 
     let get_item_type_match_pattern = field_attributes
         .values()
@@ -103,6 +117,13 @@ fn registry_derive_impl(input: DeriveInput) -> Result<TokenStream, Error> {
             fn get(&self, key: &str) -> std::option::Option<easy_settings::SettingValue> {
                 std::option::Option::Some(match key {
                     #(#field_name2 => easy_settings::SettingValue::from(self.#field_ident2.as_ref()),)*
+                    &_ => return std::option::Option::None,
+                })
+            }
+
+            fn get_with_default(&self, key: &str) -> std::option::Option<easy_settings::SettingValue> {
+                std::option::Option::Some(match key {
+                    #(#get_with_default_matches,)*
                     &_ => return std::option::Option::None,
                 })
             }

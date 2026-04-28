@@ -102,6 +102,8 @@ pub trait Registry: Default + Clone {
     #[doc=include_str!("../docs/en/Registry_Trait/get.md")]
     fn get(&self, key: &str) -> Option<SettingValue>;
 
+    fn get_with_default(&self, key: &str) -> Option<SettingValue>;
+
     #[doc=include_str!("../docs/en/Registry_Trait/items.md")]
     fn items(&self) -> Vec<(&str, SettingValue)> {
         Self::keys()

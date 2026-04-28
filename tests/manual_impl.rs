@@ -148,6 +148,20 @@ impl Registry for RegistryExample {
         })
     }
 
+    fn get_with_default(&self, key: &str) -> Option<SettingValue> {
+        Some(match key {
+            "integer" => SettingValue::from(self.get_integer()),
+            "float" => SettingValue::from(Some(self.get_float())),
+            "abc" => SettingValue::from(self.get_abc()),
+            "object" => SettingValue::from(Some(self.get_object())),
+            "array" => SettingValue::from(self.get_array()),
+            "datetime" => SettingValue::from(self.get_datetime()),
+            "bool" => SettingValue::from(self.get_bool()),
+            "combo" => SettingValue::from(self.get_combo()),
+            &_ => return None,
+        })
+    }
+
     fn get_item_type(key: &str) -> Option<TypeId> {
         Some(match key {
             "integer" => TypeId::of::<i64>(),

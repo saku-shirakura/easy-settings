@@ -317,6 +317,11 @@ async fn derive_implementation_test() {
     man_reg.set_combo(None);
     assert_eq!(man_reg.get_combo(), None);
     for key in auto_impl::RegistryExample::keys() {
+        assert_eq!(
+            auto_reg.get_with_default(key),
+            man_reg.get_with_default(key)
+        );
+        assert_eq!(auto_reg.get(key), man_reg.get(key));
         if ["object", "array", "combo"].contains(key) {
             continue;
         }
