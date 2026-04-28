@@ -80,7 +80,7 @@ ignore = [
 # Setting this to true can be helpful if you have special authentication requirements that cargo-deny does not support.
 # See Git Authentication for more information about setting up git authentication.
 #git-fetch-with-cli = true
-
+unmaintained = "none"
 # This section is considered when running `cargo deny check licenses`
 # More documentation for the licenses section can be found here:
 # https://embarkstudios.github.io/cargo-deny/checks/licenses/cfg.html
@@ -93,7 +93,8 @@ allow = [
     "Zlib",
     "Apache-2.0",
     "Unicode-3.0",
-    "BSL-1.0"
+    "BSL-1.0",
+    "BSD-3-Clause"
 ]
 # The confidence threshold for detecting a license from license text.
 # The higher the value, the more closely the license text must be to the
