@@ -20,7 +20,7 @@ sqlx-runtime-async-std = ["sqlx", "sqlx/runtime-async-std"]
 members = ["derive"]
 
 [workspace.package]
-version = "0.3.0-dev"
+version = "0.3.0"
 edition = "2024"
 license = "MIT"
 authors = ["saku-shirakura<saku@sakushira.com>"]
@@ -31,7 +31,7 @@ rust-version = "1.92"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 sqlx = { version = "0.8", features = ["macros"], optional = true }
-easy-settings-derive = { version = "0.3.0-dev", path = "derive" }
+easy-settings-derive = { version = "0.3.0", path = "derive" }
 tracing-unwrap = "1"
 tracing = "0.1"
 derive_builder = "0.20"
