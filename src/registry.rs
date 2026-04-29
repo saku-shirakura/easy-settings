@@ -4,7 +4,7 @@ use serde::Serialize;
 use std::any::TypeId;
 use tracing_unwrap::ResultExt;
 
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Debug, Clone)]
 #[doc=include_str!("../docs/en/SettingValue/details.md")]
 pub struct SettingValue(Option<String>);
 
